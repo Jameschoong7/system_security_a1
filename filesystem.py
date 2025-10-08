@@ -17,4 +17,16 @@ def test_md5():
     h.update(test_value.encode())
     print(f"MD5('{test_value}') = {h.hexdigest()}")
 
-test_md5()
+#Function to generate random salt
+def generate_salt():
+    #Random 8 digit string
+    digits = string.digits
+    salt = ''.join(random.choices(digits,k=8))
+    return salt
+
+#Function to hash password with salt
+def hash_password(password, salt):
+    combined_password = f"{password}{salt}"
+
+    print(combined_password)
+
