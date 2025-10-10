@@ -43,6 +43,7 @@ def load_data():
         with open(SALT_FILE,'r') as f:
             for line in f:
                 username, salt = line.strip().split(':')
+                users[username] = {'Salt': salt}
     except FileNotFoundError:
         print("salt.txt not found.")
 
@@ -53,8 +54,8 @@ def load_data():
                 username, hash_val, clearance = line.strip().split(':')
                 if username in users:
                     # Add hash and clearance to the existing user dictionary
-                    users[username]['hash'] = hash_val
-                    users[username]['clearance'] = int(clearance)
+                    users[username]['PassSaltHash'] = hash_val
+                    users[username]['SecurityClearance'] = int(clearance)
     except FileNotFoundError:
         print("shadow.txt not found")
 
@@ -73,12 +74,12 @@ def save_data(users, files):
      # 1. Save salts to salt.txt, overwriting the old file
     with open(SALT_FILE, 'w') as f:
         for username, data in users.items():
-            f.write(f"{username}:{data['salt']}\n")
+            f.write(f"{username}:{data['Salt']}\n")
 
     # 2. Save hashes and clearances to shadow.txt
     with open(SHADOW_FILE, 'w') as f:
         for username, data in users.items():
-            f.write(f"{username}:{data['hash']}:{data['clearance']}\n")
+            f.write(f"{username}:{data['PassSaltHash']}:{data['SecurityClearance']}\n")
 
     # 3. Save the file system simulation to Files.store
     with open(FILES_STORE, 'w') as f:
@@ -133,9 +134,64 @@ def register_user(users):
     salt = generate_salt()
     pass_salt_hash = hash_password(password,salt)
 
-    users[username]={'salt':salt,'hash':pass_salt_hash,'clearance': clearance}
+    users[username]={'Salt':salt,'PassSaltHash':pass_salt_hash,'SecurityClearance': clearance}
     print(f"User {username} created successfully")
-        
-users = {"test1":1}
-register_user(users)
+    
+#Function to assign role based on clearance
+def get_role_name(clearance):
+    if clearance == 0:
+        return "Guest"
+    elif clearance == 1:
+        return "User"
+    elif clearance == 2:
+        return "Power User"
+    elif clearance == 3:
+        return "Admin"
+    return "Unknown"
 
+
+#Function to authenticate user
+def authenticate_user(users):
+    username = input("Username: ")
+    password = input("Password: ")
+    if username in users:
+        print(f"{username} found in {SALT_FILE}\n")
+        salt = users[username]["Salt"]
+        print(f"Salt Retrieved: {salt}\nHashing...")
+        pass_salt_hash = hash_password(password,salt)
+        print(f"Hash value: {pass_salt_hash}")
+        if pass_salt_hash == users[username]["PassSaltHash"]:
+            print(f"Authentication for user {username} complete.\n")
+            print(f"The clearance for {username} is {users[username]["SecurityClearance"]}")
+            return username, users[username]["SecurityClearance"], get_role_name(users[username]["SecurityClearance"])
+        else:
+            print("\nAuthentication Failed: Incorrect password.")
+            sys.exit()
+    else:
+        print("\nAuthentication Failed: User not found.")
+        sys.exit()
+
+
+#Function to check user whether have specific permission on a file with security clearance
+
+#Main function
+def main():
+    test_md5()
+
+    #load file data to memory (Files.store, Shadow.txt, Salt.txt)
+    users, files = load_data()
+
+    #flag (-i) for user registration
+    if len(sys.argv) > 1 and sys.argv[1] == "-i":
+        #register user
+        register_user(users)
+
+        #save back to files
+        save_data(users,files)
+        return
+    
+    username, clearance, role = authenticate_user(users)
+
+
+
+main()
