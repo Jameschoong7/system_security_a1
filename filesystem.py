@@ -173,6 +173,53 @@ def authenticate_user(users):
 
 
 #Function to check user whether have specific permission on a file with security clearance
+def has_permission(user_role, user_clearance, action, file_clearance = -1):
+    #Dictonary that define the RBAC
+    role_permissions ={
+        "Guest":      {'actions': ['R', 'L'], 'max_level': 0, 'write_down': False},
+        "User":       {'actions': ['C', 'A', 'R', 'L'], 'max_level': 1, 'write_down': True},
+        "Power User": {'actions': ['C', 'A', 'R', 'W', 'L'], 'max_level': 2, 'write_down': True},
+        "Admin":      {'actions': ['C', 'A', 'R', 'W', 'L', 'S'], 'max_level': 3, 'write_down': True}
+
+    
+    }
+    if user_role not in role_permissions:
+        return False
+
+    #Get rules based on user role
+    rules = role_permissions[user_role]
+
+    #Check whether the action performed is allowed in the role
+    if action not in rules["actions"]:
+        return False
+    
+    #Check for non file action (List, Save)
+    if action in ['L','S']:
+        return True
+    
+    #For create, user must be able to act at their own clearance level
+    if action =='C':
+        return user_clearance <=rules['max_level'] 
+    
+    #For read, append, write , is compared to file's clearance
+
+    #no read-up
+    if user_clearance < file_clearance:
+        return False
+    
+    #check if user role is allowed to interact with the file
+    if file_clearance > rules['max_level']:
+        return False
+    
+    #check for role is allowed to write-down
+    if action in ['A','W'] and not rules['write_down']:
+        return False
+    
+#Fucntion for handling file system menu
+def file_system_menu(username, clearance, role, users, files):
+    pass
+
+
 
 #Main function
 def main():
