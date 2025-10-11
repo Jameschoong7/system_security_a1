@@ -163,6 +163,7 @@ def authenticate_user(users):
         if pass_salt_hash == users[username]["PassSaltHash"]:
             print(f"Authentication for user {username} complete.\n")
             print(f"The clearance for {username} is {users[username]["SecurityClearance"]}")
+            print(f"Assigned Role: {get_role_name(users[username]["SecurityClearance"])}")
             return username, users[username]["SecurityClearance"], get_role_name(users[username]["SecurityClearance"])
         else:
             print("\nAuthentication Failed: Incorrect password.")
@@ -201,7 +202,7 @@ def has_permission(user_role, user_clearance, action, file_clearance = -1):
     if action =='C':
         return user_clearance <=rules['max_level'] 
     
-    #For read, append, write , is compared to file's clearance
+    #For read, append, write , is compared to file's clearance#
 
     #no read-up
     if user_clearance < file_clearance:
@@ -214,12 +215,84 @@ def has_permission(user_role, user_clearance, action, file_clearance = -1):
     #check for role is allowed to write-down
     if action in ['A','W'] and not rules['write_down']:
         return False
+    return True
     
 #Fucntion for handling file system menu
 def file_system_menu(username, clearance, role, users, files):
-    pass
+    #Main menu
+    while True:
+        print("\nOptions: (C)reate, (A)ppend, (R)ead, (W)rite, (L)ist, (S)ave or (E)xit.")
+        choice = input("Enter option: ").upper()
 
+        if choice =='C':
+            #Check if user has permission to create at their own level
+            if not has_permission(role, clearance, 'C',clearance):
+                print("Failure: You do not have permission to create files. ")
+                continue
+            filename = input("Filename: ")
+            if filename in files:
+                print(f"Failure: File '{filename}' already exists. ")
+            else:
+                # File created with classification same with user clearance
+                files[filename]={
+                    "owner":username,
+                    "clearance":clearance,
+                    "content":""
+                }
+                print(f"Success: File '{filename}' craeted. ")
+        
+        elif choice in ["A","R","W"]:
+            filename = input("Filename: ")
+            if filename not in files:
+                print(f"Failure: File '{filename}' does not exist.")
+                continue
+            
+            file_clearance = files[filename]['clearance']
 
+            #Check permission based on action and file's clearance
+            if has_permission(role,clearance,choice,file_clearance):
+                print(f"Success: Access granted for action '{choice}' on '{filename}'.")
+                if choice == 'R':
+                    print(f"--- Content of {filename} ---")
+                    print(files[filename]['content'])
+                    print(f"--- End of Content ---")
+                elif choice =='A':
+                    content_to_append = input("Enter content to append: ")
+                    files[filename]['content'] += content_to_append
+                elif choice =='W':
+                    content_to_write = input("Enter new content to write: ")
+                    files[filename]['content'] = content_to_write
+            else:
+                print(f"Failure: Permission denied for action '{choice}' on '{filename}'.")
+            
+        elif choice == 'L':
+            if not has_permission(role, clearance,'L'):
+                print("Failure: You do not have permission to list files. ")
+                continue
+            print("\n ---File System Listing---")
+
+            if not files:
+                print("The file is empty.")
+            else:
+                for filename, data in files.items():
+                    print(f"- Filename: {filename}, Owner: {data['owner']}, Classification: {data['clearance']}")
+            print("---------------------------")
+
+        elif choice =='S':
+            if not has_permission(role, clearance,'S'):
+                print("Failure: You do not have permission to save the file system.")
+                continue
+
+            save_data(users,files)
+
+        elif choice =='E':
+            confirm = input("Shut down the FileSystem? (Y)es or (N)o: ").upper()
+
+            if confirm == 'Y':
+                print("Shutting down...")
+                break
+        else:
+            print("Invalid option, please try again. ")
 
 #Main function
 def main():
@@ -239,6 +312,7 @@ def main():
     
     username, clearance, role = authenticate_user(users)
 
+    file_system_menu(username, clearance, role,users,files)
 
 
 main()

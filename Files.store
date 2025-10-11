@@ -1,1 +1,7 @@
-{}
+{
+    "TestFile1": {
+        "owner": "User1",
+        "clearance": 3,
+        "content": "Hello World"
+    }
+}
