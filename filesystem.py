@@ -182,8 +182,8 @@ def has_permission(user_role, user_clearance, action, file_clearance = -1):
     #Dictonary that define the RBAC
     role_permissions ={
         "Guest":      {'actions': ['R', 'L'], 'max_level': 0, 'write_down': False},
-        "User":       {'actions': ['C', 'A', 'R', 'L'], 'max_level': 1, 'write_down': True},
-        "Power User": {'actions': ['C', 'A', 'R', 'W', 'L'], 'max_level': 2, 'write_down': True},
+        "User":       {'actions': ['C', 'A', 'R', 'L', 'S'], 'max_level': 1, 'write_down': True},
+        "Power User": {'actions': ['C', 'A', 'R', 'W', 'L', 'S'], 'max_level': 2, 'write_down': True},
         "Admin":      {'actions': ['C', 'A', 'R', 'W', 'L', 'S'], 'max_level': 3, 'write_down': True}
 
     
