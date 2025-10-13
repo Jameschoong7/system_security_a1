@@ -61,9 +61,12 @@ def load_data():
 
     #load file from Files.store
     try:
-        with open(FILES_STORE,'r') as f:
-            # json is used to parse the file directly into the dictionary
-            files = json.load(f)
+        if os.path.exists(FILES_STORE) and os.path.getsize(FILES_STORE) > 0:
+            with open(FILES_STORE,'r') as f:
+                # json is used to parse the file directly into the dictionary
+                files = json.load(f)
+        else:
+             print("Files.store is empty or not found, starting with an empty file system.")        
     except FileNotFoundError:
         print("Files.store not found")
 
@@ -108,7 +111,8 @@ def register_user(users):
     #Check if username exist
     username = input("Username: ")
     if username in users:
-        raise Exception("The username exists already. Program will terminate.")
+        print("The username exists already. Program will terminate.")
+        sys.exit()
     
     #Ask for password
     while True:
