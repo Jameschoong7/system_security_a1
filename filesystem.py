@@ -104,7 +104,9 @@ def validate_password(password):
             has_alphabet = True
     if has_digit and has_alphabet:
         return True
-    return False
+    else:
+        print("Warning: Password must contain both letters and numbers.")
+        return False
 
 #Function to register user (FileSystem -i)
 def register_user(users):
